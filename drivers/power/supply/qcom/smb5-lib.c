@@ -1998,7 +1998,7 @@ int smblib_get_prop_batt_status(struct smb_charger *chg,
 	union power_supply_propval pval = {0, };
 	bool usb_online, dc_online;
 	u8 stat;
-	int rc, suspend = 0;
+	int batt_health, rc, suspend = 0;
 
 	if (chg->fake_chg_status_on_debug_batt) {
 		rc = smblib_get_prop_from_bms(chg,
@@ -2053,6 +2053,14 @@ int smblib_get_prop_batt_status(struct smb_charger *chg,
 	}
 	dc_online = (bool)pval.intval;
 
+	rc = smblib_get_prop_batt_health(chg, &pval);
+	if (rc < 0) {
+		smblib_err(chg, "Couldn't get batt health property rc=%d\n",
+			rc);
+		return rc;
+	}
+	batt_health = pval.intval;
+
 	rc = smblib_read(chg, BATTERY_CHARGER_STATUS_1_REG, &stat);
 	if (rc < 0) {
 		smblib_err(chg, "Couldn't read BATTERY_CHARGER_STATUS_1 rc=%d\n",
@@ -2092,6 +2100,13 @@ int smblib_get_prop_batt_status(struct smb_charger *chg,
 	default:
 		val->intval = POWER_SUPPLY_STATUS_UNKNOWN;
 		break;
+	}
+
+	if ((POWER_SUPPLY_HEALTH_WARM == batt_health
+		|| POWER_SUPPLY_HEALTH_OVERHEAT == batt_health)
+		&& (val->intval == POWER_SUPPLY_STATUS_FULL)) {
+		val->intval = POWER_SUPPLY_STATUS_CHARGING;
+		return 0;
 	}
 
 	if (is_charging_paused(chg)) {
@@ -4118,7 +4133,7 @@ int smblib_set_prop_pd_current_max(struct smb_charger *chg,
 static int smblib_handle_usb_current(struct smb_charger *chg,
 					int usb_current)
 {
-	int rc = 0, rp_ua, typec_mode;
+	int rc = 0, rp_ua;
 	union power_supply_propval val = {0, };
 
 	if (chg->real_charger_type == POWER_SUPPLY_TYPE_USB_FLOAT) {
@@ -4140,13 +4155,9 @@ static int smblib_handle_usb_current(struct smb_charger *chg,
 
 			if (chg->connector_type ==
 					POWER_SUPPLY_CONNECTOR_TYPEC) {
-				/*
-				 * Valid FLOAT charger, report the current
-				 * based of Rp.
-				 */
-				typec_mode = smblib_get_prop_typec_mode(chg);
-				rp_ua = get_rp_based_dcp_current(chg,
-								typec_mode);
+				rp_ua = NONSTANDARD_CURRENT_UA;
+				smblib_dbg(chg, PR_MISC,
+						"force set FLOAT charger ICL rp_ua=%d\n",rp_ua);
 				rc = vote(chg->usb_icl_votable,
 						SW_ICL_MAX_VOTER, true, rp_ua);
 				if (rc < 0)
@@ -4163,6 +4174,10 @@ static int smblib_handle_usb_current(struct smb_charger *chg,
 			 * charge with the requested current and update the
 			 * real_charger_type
 			 */
+			usb_current = NONSTANDARD_CURRENT_UA;
+			smblib_dbg(chg, PR_MISC,
+				"force set FLOAT charger ICL usb_current=%d\n",
+					usb_current);
 			chg->real_charger_type = POWER_SUPPLY_TYPE_USB;
 			rc = vote(chg->usb_icl_votable, USB_PSY_VOTER,
 						true, usb_current);
@@ -4778,8 +4793,10 @@ int smblib_get_charge_current(struct smb_charger *chg,
 			break;
 		case DCP_CHARGER_BIT:
 		case OCP_CHARGER_BIT:
-		case FLOAT_CHARGER_BIT:
 			current_ua = DCP_CURRENT_UA;
+			break;
+		case FLOAT_CHARGER_BIT:
+			current_ua = NONSTANDARD_CURRENT_UA;
 			break;
 		default:
 			current_ua = 0;
@@ -4798,8 +4815,10 @@ int smblib_get_charge_current(struct smb_charger *chg,
 			break;
 		case DCP_CHARGER_BIT:
 		case OCP_CHARGER_BIT:
-		case FLOAT_CHARGER_BIT:
 			current_ua = chg->default_icl_ua;
+			break;
+		case FLOAT_CHARGER_BIT:
+			current_ua = NONSTANDARD_CURRENT_UA;
 			break;
 		default:
 			current_ua = 0;
@@ -5542,12 +5561,12 @@ static void update_sw_icl_max(struct smb_charger *chg, int pst)
 				true, DCP_CURRENT_UA);
 		else
 			/*
-			 * limit ICL to 100mA, the USB driver will
+			 * limit ICL to 1000mA, the USB driver will
 			 * enumerate to check if this is a SDP and
 			 * appropriately set the current.
 			 */
-			vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER,
-					true, SDP_100_MA);
+			vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, true,
+					FLOAT_ADD_1000_MA);
 		break;
 	case POWER_SUPPLY_TYPE_UNKNOWN:
 	default:
