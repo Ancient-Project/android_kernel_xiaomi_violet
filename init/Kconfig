@@ -528,6 +528,13 @@ config PSI_DEFAULT_DISABLED
 
 	  Say N if unsure.
 
+config PSI_DUMMY
+	bool "Pressure stall information tracking, but no operation"
+	default n
+	depends on ANDROID_LOW_MEMORY_KILLER && !PSI
+	help
+	  Only the dummy PSI for ROM compatibility forces using LMKD.
+
 endmenu # "CPU/Task time and stats accounting"
 
 source "kernel/rcu/Kconfig"
