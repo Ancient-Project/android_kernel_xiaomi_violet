@@ -3,6 +3,7 @@ jobs:
   compile:
    docker:
       - image: ubuntu:22.04
+   resource_class: large
    steps:
       - run:
           no_output_timeout: 50m
