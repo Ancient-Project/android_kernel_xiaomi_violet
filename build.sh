@@ -102,26 +102,6 @@ setup_ksu() {
 	fi
 }
 
-# Set function for defconfig changes
-cfg_changes() {
-	if [ $COMPILER == "clang" ]; then
-		sed -i 's/CONFIG_LTO_GCC=y/# CONFIG_LTO_GCC is not set/g' arch/arm64/configs/vendor/violet-perf_defconfig
-		sed -i 's/CONFIG_GCC_GRAPHITE=y/# CONFIG_GCC_GRAPHITE is not set/g' arch/arm64/configs/vendor/violet-perf_defconfig
-	elif [ $COMPILER == "gcc" ]; then
-		sed -i 's/CONFIG_LTO=y/# CONFIG_LTO is not set/g' arch/arm64/configs/vendor/violet-perf_defconfig
-		sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/vendor/violet-perf_defconfig
-		sed -i 's/# CONFIG_LTO_NONE is not set/CONFIG_LTO_NONE=y/g' arch/arm64/configs/vendor/violet-perf_defconfig
-	fi
-
-	if [ $LOCALBUILD == "1" ]; then
-		if [ $COMPILER == "clang" ]; then
-			sed -i 's/# CONFIG_THINLTO is not set/CONFIG_THINLTO=y/g' arch/arm64/configs/vendor/violet-perf_defconfig
-		elif [ $COMPILER == "gcc" ]; then
-			sed -i 's/CONFIG_LTO_GCC=y/# CONFIG_LTO_GCC is not set/g' arch/arm64/configs/vendor/violet-perf_defconfig
-		fi
-	fi
-}
-
 # Set function for cloning repository
 clone() {
 	# Clone AnyKernel3
@@ -153,7 +133,7 @@ clone() {
 # Set function for naming zip file
 set_naming() {
 	if [ -d "$KERNEL_DIR"/KernelSU ]; then
-		KERNEL_NAME="AncientKernel-violet-ksu-$ZIP_DATE"
+		KERNEL_NAME="AncientKernel-violet-kernelsu-$ZIP_DATE"
 		export ZIP_NAME="$KERNEL_NAME.zip"
 	else
 		KERNEL_NAME="AncientKernel-violet-$ZIP_DATE"
@@ -167,6 +147,7 @@ send_tg_msg() {
 	            "<b>Kernel Version : </b><code>$KERVER</code>" \
 	            "<b>Date : </b><code>$DATE</code>" \
 	            "<b>Device : </b><code>Redmi Note 7 Pro (violet)</code>" \
+                    "<b>Android : </b><code>A13 - A14</code>" \
 	            "<b>Pipeline Host : </b><code>$KBUILD_BUILD_HOST</code>" \
 	            "<b>Host CPU Name : </b><code>$CPU_NAME</code>" \
 	            "<b>Host Core Count : </b><code>$PROCS</code>" \
@@ -181,21 +162,9 @@ compile() {
 	make O=out "$DEFCONFIG"
 	BUILD_START=$(date +"%s")
 	if [ $COMPILER == "clang" ]; then
-		if [ $LOCALBUILD == "0" ]; then
-			make -j"$PROCS" O=out \
-					CROSS_COMPILE=aarch64-linux-gnu- \
-					LLVM=1
-		elif [ $LOCALBUILD == "1" ]; then
-			make -j"$PROCS" O=out \
-					CROSS_COMPILE=aarch64-linux-gnu- \
-					CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
-					CC=clang \
-					AR=llvm-ar \
-					NM=llvm-nm \
-					LD=ld.lld \
-					OBJDUMP=llvm-objdump \
-					STRIP=llvm-strip
-		fi
+		make -j"$PROCS" O=out \
+		CROSS_COMPILE=aarch64-linux-gnu- \
+		LLVM=1
 	elif [ $COMPILER == "gcc" ]; then
 		export CROSS_COMPILE_COMPAT=$GCC32_DIR/bin/arm-eabi-
 		make -j"$PROCS" O=out CROSS_COMPILE=aarch64-elf-
@@ -229,7 +198,7 @@ compile() {
 gen_zip() {
 	if [[ $LOCALBUILD == "1" || -d "$KERNEL_DIR"/KernelSU ]]; then
 		cd AnyKernel3 || exit
-		#rm -rf dtbo.img dtb.img Image.gz-dtb *.zip
+		rm -rf dtbo.img dtb.img Image.gz-dtb *.zip
 		cd ..
 	fi
 
@@ -256,15 +225,13 @@ gen_zip() {
 }
 
 clone
-cfg_changes
 if [ $LOCALBUILD == "0" ]; then
 	send_tg_msg
 fi
 compile
 set_naming
 gen_zip
-#setup_ksu
-cfg_changes
+setup_ksu
 compile
 set_naming
 gen_zip
