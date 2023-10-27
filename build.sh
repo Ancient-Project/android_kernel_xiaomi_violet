@@ -108,8 +108,8 @@ clone() {
 	git clone --depth=1 https://github.com/rezaadi0105/AnyKernel3.git -b master
 
 	if [ $COMPILER == "clang" ]; then
-		# Clone Proton clang
-		git clone --depth=1 https://gitlab.com/fiqri19102002/proton_clang-mirror.git clang
+		# Clone clang
+		git clone --depth=1 https://gitlab.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r498229b.git -b 13.0 clang
 		# Set environment for clang
 		TC_DIR=$KERNEL_DIR/clang
 		# Get path and compiler string
