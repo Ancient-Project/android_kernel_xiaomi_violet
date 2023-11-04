@@ -216,6 +216,7 @@ gen_zip() {
 
 	if [ $LOCALBUILD == "0" ]; then
 		tg_post_build "$ZIP_FINAL" "<b>Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)</b>"
+                tg_post_msg "<b>Build Successfully 💯</b>"
 	fi
 
 	if ! [[ -d "/home/rezaadi0105" || -d "/root/project" ]]; then
