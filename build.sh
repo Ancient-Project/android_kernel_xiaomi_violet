@@ -102,10 +102,29 @@ setup_ksu() {
 	fi
 }
 
+anykernel3_std() {
+        # Clone AnyKernel3
+        git clone --depth=1 https://github.com/rezaadi0105/AnyKernel3.git -b master
+}
+
+anykernel3_dsp() {
+        # Clone AnyKernel3
+        git clone --depth=1 https://github.com/rezaadi0105/AnyKernel3.git -b dynamic
+}
+
+# Set function for clean
+clean() {
+        rm -rf AnyKernel3
+        git restore arch/ drivers/ fs/ init/ usr/
+}
+
+# Set function for setup dynamic system partitions
+setup_dsp() {
+        git apply dsp-hook.patch
+}
+
 # Set function for cloning repository
 clone() {
-	# Clone AnyKernel3
-	git clone --depth=1 https://github.com/rezaadi0105/AnyKernel3.git -b master
 
 	if [ $COMPILER == "clang" ]; then
 		# Clone clang
@@ -133,12 +152,23 @@ clone() {
 # Set function for naming zip file
 set_naming() {
 	if [ -d "$KERNEL_DIR"/KernelSU ]; then
-		KERNEL_NAME="AncientKernel-violet-kernelsu-$ZIP_DATE"
+		KERNEL_NAME="AncientKernel-violet-STD-kernelsu-$ZIP_DATE"
 		export ZIP_NAME="$KERNEL_NAME.zip"
 	else
-		KERNEL_NAME="AncientKernel-violet-$ZIP_DATE"
+		KERNEL_NAME="AncientKernel-violet-STD-$ZIP_DATE"
 		export ZIP_NAME="$KERNEL_NAME.zip"
 	fi
+}
+
+# Set function for naming zip file
+set_naming_dsp() {
+        if [ -d "$KERNEL_DIR"/KernelSU ]; then
+                KERNEL_NAME="AncientKernel-violet-DSP-kernelsu-$ZIP_DATE"
+                export ZIP_NAME="$KERNEL_NAME.zip"
+        else
+                KERNEL_NAME="AncientKernel-violet-DSP-$ZIP_DATE"
+                export ZIP_NAME="$KERNEL_NAME.zip"
+        fi
 }
 
 # Set function for send messages to Telegram
@@ -227,13 +257,32 @@ gen_zip() {
 }
 
 clone
+anykernel3_std
 if [ $LOCALBUILD == "0" ]; then
 	send_tg_msg
 fi
 compile
 set_naming
 gen_zip
+
+clean
+anykernel3_dsp
+setup_dsp
+compile
+set_naming_dsp
+gen_zip
+
+clean
+anykernel3_std
 setup_ksu
 compile
 set_naming
+gen_zip
+
+clean
+anykernel3_dsp
+setup_dsp
+setup_ksu
+compile
+set_naming_dsp
 gen_zip
