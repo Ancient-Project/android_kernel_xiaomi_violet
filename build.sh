@@ -229,13 +229,14 @@ compile() {
 gen_zip() {
 	if [[ $LOCALBUILD == "1" || -d "$KERNEL_DIR"/KernelSU ]]; then
 		cd AnyKernel3 || exit
-		rm -rf dtbo/kdr/dtbo.img dtb.img Image.gz-dtb *.zip
+		rm -rf dtbs/clo/dtb.img dtbo.img Image* *.zip
 		cd ..
 	fi
 
 	# Move kernel image to AnyKernel3
-	mv "$IMG_DIR"/dtbo.img AnyKernel3/dtbo/kdr/dtbo.img
-	mv "$IMG_DIR"/Image.gz-dtb AnyKernel3/Image.gz-dtb
+        mv "$IMG_DIR"/dtb.img AnyKernel3/dtbs/clo/dtb.img
+	mv "$IMG_DIR"/dtbo.img AnyKernel3/dtbo.img
+	mv "$IMG_DIR"/Image.gz AnyKernel3/Image.gz
 	cd AnyKernel3 || exit
 
 	# Archive to flashable zip
