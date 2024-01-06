@@ -177,7 +177,7 @@ send_tg_msg() {
 	            "<b>Kernel Version : </b><code>$KERVER</code>" \
 	            "<b>Date : </b><code>$DATE</code>" \
 	            "<b>Device : </b><code>Redmi Note 7 Pro (violet)</code>" \
-                    "<b>Android : </b><code>A13 - A14</code>" \
+                    "<b>Android : </b><code>A11 - A14</code>" \
 	            "<b>Pipeline Host : </b><code>$KBUILD_BUILD_HOST</code>" \
 	            "<b>Host CPU Name : </b><code>$CPU_NAME</code>" \
 	            "<b>Host Core Count : </b><code>$PROCS</code>" \
