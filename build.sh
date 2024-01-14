@@ -128,12 +128,12 @@ clone() {
 
 	if [ $COMPILER == "clang" ]; then
 		# Clone clang
-		git clone --depth=1 https://gitlab.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r498229b.git -b 13.0 clang
+		git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 --depth=1 clang
 		# Set environment for clang
-		TC_DIR=$KERNEL_DIR/clang
+		CLANG_DIR=$KERNEL_DIR/clang/clang-r510928
 		# Get path and compiler string
-		KBUILD_COMPILER_STRING=$("$TC_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
-		PATH=$TC_DIR/bin/:$PATH
+		KBUILD_COMPILER_STRING=$("$CLANG_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+		PATH=$CLANG_DIR/bin/:$PATH
 	elif [ $COMPILER == "gcc" ]; then
 		# Clone GCC ARM64 and ARM32
 		git clone https://github.com/fiqri19102002/aarch64-gcc.git -b release/elf-12 --depth=1 gcc64
