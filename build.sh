@@ -102,14 +102,9 @@ setup_ksu() {
 	fi
 }
 
-anykernel3_std() {
+anykernel3() {
         # Clone AnyKernel3
-        git clone --depth=1 https://github.com/rezaadi0105/AnyKernel3.git -b master
-}
-
-anykernel3_dsp() {
-        # Clone AnyKernel3
-        git clone --depth=1 https://github.com/rezaadi0105/AnyKernel3.git -b dynamic
+        git clone --depth=1 https://github.com/rezaadi0105/AnyKernel3.git -b single
 }
 
 # Set function for clean
@@ -229,14 +224,13 @@ compile() {
 gen_zip() {
 	if [[ $LOCALBUILD == "1" || -d "$KERNEL_DIR"/KernelSU ]]; then
 		cd AnyKernel3 || exit
-		rm -rf dtbs/clo/dtb.img dtbo.img Image* *.zip
+		rm -rf dtb* Image* *.zip
 		cd ..
 	fi
 
 	# Move kernel image to AnyKernel3
-        mv "$IMG_DIR"/dtb.img AnyKernel3/dtbs/clo/dtb.img
 	mv "$IMG_DIR"/dtbo.img AnyKernel3/dtbo.img
-	mv "$IMG_DIR"/Image.gz AnyKernel3/Image.gz
+	mv "$IMG_DIR"/Image.gz-dtb AnyKernel3/Image.gz-dtb
 	cd AnyKernel3 || exit
 
 	# Archive to flashable zip
@@ -258,7 +252,7 @@ gen_zip() {
 }
 
 clone
-anykernel3_std
+anykernel3
 if [ $LOCALBUILD == "0" ]; then
 	send_tg_msg
 fi
@@ -267,21 +261,21 @@ set_naming
 gen_zip
 
 clean
-anykernel3_dsp
+anykernel3
 setup_dsp
 compile
 set_naming_dsp
 gen_zip
 
 clean
-anykernel3_std
+anykernel3
 setup_ksu
 compile
 set_naming
 gen_zip
 
 clean
-anykernel3_dsp
+anykernel3
 setup_dsp
 setup_ksu
 compile
