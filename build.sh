@@ -114,8 +114,8 @@ clean() {
 }
 
 # Set function for setup dynamic system partitions
-setup_dsp() {
-        git apply dsp-hook.patch
+setup_legacy() {
+        git apply legacy-hook.patch
 }
 
 # Set function for cloning repository
@@ -147,21 +147,21 @@ clone() {
 # Set function for naming zip file
 set_naming() {
 	if [ -d "$KERNEL_DIR"/KernelSU ]; then
-		KERNEL_NAME="AncientKernel-violet-STD-kernelsu-$ZIP_DATE"
+		KERNEL_NAME="AncientKernel-violet-dynamic-kernelsu-$ZIP_DATE"
 		export ZIP_NAME="$KERNEL_NAME.zip"
 	else
-		KERNEL_NAME="AncientKernel-violet-STD-$ZIP_DATE"
+		KERNEL_NAME="AncientKernel-violet-dynamic-$ZIP_DATE"
 		export ZIP_NAME="$KERNEL_NAME.zip"
 	fi
 }
 
 # Set function for naming zip file
-set_naming_dsp() {
+set_naming_legacy() {
         if [ -d "$KERNEL_DIR"/KernelSU ]; then
-                KERNEL_NAME="AncientKernel-violet-DSP-kernelsu-$ZIP_DATE"
+                KERNEL_NAME="AncientKernel-violet-legacy-kernelsu-$ZIP_DATE"
                 export ZIP_NAME="$KERNEL_NAME.zip"
         else
-                KERNEL_NAME="AncientKernel-violet-DSP-$ZIP_DATE"
+                KERNEL_NAME="AncientKernel-violet-legacy-$ZIP_DATE"
                 export ZIP_NAME="$KERNEL_NAME.zip"
         fi
 }
@@ -262,9 +262,9 @@ gen_zip
 
 clean
 anykernel3
-setup_dsp
+setup_legacy
 compile
-set_naming_dsp
+set_naming_legacy
 gen_zip
 
 clean
@@ -276,8 +276,8 @@ gen_zip
 
 clean
 anykernel3
-setup_dsp
+setup_legacy
 setup_ksu
 compile
-set_naming_dsp
+set_naming_legacy
 gen_zip
