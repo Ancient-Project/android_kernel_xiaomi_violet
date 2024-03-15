@@ -125,7 +125,7 @@ clone() {
 		# Clone clang
 		git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 --depth=1 clang
 		# Set environment for clang
-		CLANG_DIR=$KERNEL_DIR/clang/clang-r510928
+		CLANG_DIR=$KERNEL_DIR/clang/clang-r522817
 		# Get path and compiler string
 		KBUILD_COMPILER_STRING=$("$CLANG_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
 		PATH=$CLANG_DIR/bin/:$PATH
