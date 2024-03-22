@@ -1,0 +1,155 @@
+diff --git a/arch/arm64/boot/dts/xiaomi/violet/violet-sm6150.dtsi b/arch/arm64/boot/dts/xiaomi/violet/violet-sm6150.dtsi
+index 21aec506d284..ec52a385d9e9 100644
+--- a/arch/arm64/boot/dts/xiaomi/violet/violet-sm6150.dtsi
++++ b/arch/arm64/boot/dts/xiaomi/violet/violet-sm6150.dtsi
+@@ -22,13 +22,12 @@
+ 
+ &firmware {
+     android {
+-        boot_devices = "soc/7c4000.sdhci";
+         vbmeta {
+             parts = "vbmeta,boot,recovery,system,vendor,dtbo";
+         };
+         fstab {
+             vendor {
+-                status = "disabled";
++                fsmgr_flags = "wait,avb";
+             };
+         };
+     };
+diff --git a/arch/arm64/configs/vendor/violet-perf_defconfig b/arch/arm64/configs/vendor/violet-perf_defconfig
+index 7b197e9926c6..8d894d91669c 100644
+--- a/arch/arm64/configs/vendor/violet-perf_defconfig
++++ b/arch/arm64/configs/vendor/violet-perf_defconfig
+@@ -175,7 +175,6 @@ CONFIG_DEFAULT_USE_ENERGY_AWARE=y
+ CONFIG_BLK_DEV_INITRD=y
+ CONFIG_INITRAMFS_SOURCE=""
+ # CONFIG_INITRAMFS_FORCE is not set
+-CONFIG_INITRAMFS_IGNORE_SKIP_FLAG=y
+ CONFIG_RD_GZIP=y
+ CONFIG_RD_BZIP2=y
+ CONFIG_RD_LZMA=y
+@@ -5408,7 +5407,7 @@ CONFIG_MISC_FILESYSTEMS=y
+ # CONFIG_AFFS_FS is not set
+ CONFIG_ECRYPT_FS=y
+ CONFIG_ECRYPT_FS_MESSAGING=y
+-# CONFIG_SDCARD_FS is not set
++CONFIG_SDCARD_FS=y
+ # CONFIG_HFS_FS is not set
+ # CONFIG_HFSPLUS_FS is not set
+ # CONFIG_BEFS_FS is not set
+diff --git a/fs/proc/cmdline.c b/fs/proc/cmdline.c
+index 4a24f4975793..403cbb12a6e9 100644
+--- a/fs/proc/cmdline.c
++++ b/fs/proc/cmdline.c
+@@ -3,37 +3,10 @@
+ #include <linux/init.h>
+ #include <linux/proc_fs.h>
+ #include <linux/seq_file.h>
+-#ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
+-#include <asm/setup.h>
+-#endif
+-
+-#ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
+-#define INITRAMFS_STR_FIND "skip_initramf"
+-#define INITRAMFS_STR_REPLACE "want_initramf"
+-#define INITRAMFS_STR_LEN (sizeof(INITRAMFS_STR_FIND) - 1)
+-
+-static char proc_command_line[COMMAND_LINE_SIZE];
+-
+-static void proc_command_line_init(void) {
+-	char *offset_addr;
+-
+-	strcpy(proc_command_line, saved_command_line);
+-
+-	offset_addr = strstr(proc_command_line, INITRAMFS_STR_FIND);
+-	if (!offset_addr)
+-		return;
+-
+-	memcpy(offset_addr, INITRAMFS_STR_REPLACE, INITRAMFS_STR_LEN);
+-}
+-#endif
+ 
+ static int cmdline_proc_show(struct seq_file *m, void *v)
+ {
+-#ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
+-	seq_printf(m, "%s\n", proc_command_line);
+-#else
+ 	seq_printf(m, "%s\n", saved_command_line);
+-#endif
+ 	return 0;
+ }
+ 
+@@ -51,10 +24,6 @@ static const struct file_operations cmdline_proc_fops = {
+ 
+ static int __init proc_cmdline_init(void)
+ {
+-#ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
+-	proc_command_line_init();
+-#endif
+-
+ 	proc_create("cmdline", 0, NULL, &cmdline_proc_fops);
+ 	return 0;
+ }
+diff --git a/init/do_mounts.c b/init/do_mounts.c
+index 8228dd945a0f..f1645f4ece5e 100644
+--- a/init/do_mounts.c
++++ b/init/do_mounts.c
+@@ -298,7 +298,6 @@ dev_t name_to_dev_t(const char *name)
+ }
+ EXPORT_SYMBOL_GPL(name_to_dev_t);
+ 
+-#if 0
+ static int __init root_dev_setup(char *line)
+ {
+ 	strlcpy(saved_root_name, line, sizeof(saved_root_name));
+@@ -332,7 +331,6 @@ static int __init rootwait_setup(char *str)
+ }
+ 
+ __setup("rootwait", rootwait_setup);
+-#endif
+ 
+ static char * __initdata root_mount_data;
+ static int __init root_data_setup(char *str)
+diff --git a/init/initramfs.c b/init/initramfs.c
+index d9f09c81b740..5ea7f1b5ec44 100644
+--- a/init/initramfs.c
++++ b/init/initramfs.c
+@@ -610,16 +610,14 @@ static void __init clean_rootfs(void)
+ 
+ static int __initdata do_skip_initramfs;
+ 
+-#if 0
+ static int __init skip_initramfs_param(char *str)
+ {
+ 	if (*str)
+ 		return 0;
+-	do_skip_initramfs = !IS_ENABLED(CONFIG_INITRAMFS_IGNORE_SKIP_FLAG);
++	do_skip_initramfs = 1;
+ 	return 1;
+ }
+ __setup("skip_initramfs", skip_initramfs_param);
+-#endif
+ 
+ static int __init populate_rootfs(void)
+ {
+diff --git a/usr/Kconfig b/usr/Kconfig
+index e57ebaace3c9..8b4826de1189 100644
+--- a/usr/Kconfig
++++ b/usr/Kconfig
+@@ -32,15 +32,6 @@ config INITRAMFS_FORCE
+ 	  and is useful if you cannot or don't want to change the image
+ 	  your bootloader passes to the kernel.
+ 
+-config INITRAMFS_IGNORE_SKIP_FLAG
+-	bool "Force initramfs even when skip_initramfs is set"
+-	default n
+-	help
+-	  Ignore skip_initramfs cmdline flag.
+-	  This should only be used if you have no control over cmdline
+-	  passed by your bootloader yet you can't use CMDLINE_FORCE.
+-	  If unsure say N.
+-
+ config INITRAMFS_ROOT_UID
+ 	int "User ID to map to 0 (user root)"
+ 	depends on INITRAMFS_SOURCE!=""
