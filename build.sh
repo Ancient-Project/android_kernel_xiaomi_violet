@@ -267,17 +267,17 @@ compile
 set_naming_legacy
 gen_zip
 
-clean
-anykernel3
-setup_ksu
-compile
-set_naming
-gen_zip
+#clean
+#anykernel3
+#setup_ksu
+#compile
+#set_naming
+#gen_zip
 
-clean
-anykernel3
-setup_legacy
-setup_ksu
-compile
-set_naming_legacy
-gen_zip
+#clean
+#anykernel3
+#setup_legacy
+#setup_ksu
+#compile
+#set_naming_legacy
+#gen_zip
