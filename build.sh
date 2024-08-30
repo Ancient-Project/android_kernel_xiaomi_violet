@@ -93,7 +93,7 @@ tg_post_build() {
 
 # Set function for setup KernelSU
 setup_ksu() {
-	curl -kLSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
+	curl -kLSs "https://raw.githubusercontent.com/Ancient-Project/KernelSU/main/kernel/setup.sh" | bash -s main
 	if [ -d "$KERNEL_DIR"/KernelSU ]; then
 		git apply KernelSU-hook.patch
 	else
@@ -172,7 +172,7 @@ send_tg_msg() {
 	            "<b>Kernel Version : </b><code>$KERVER</code>" \
 	            "<b>Date : </b><code>$DATE</code>" \
 	            "<b>Device : </b><code>Redmi Note 7 Pro (violet)</code>" \
-                    "<b>Android : </b><code>A13 - A14</code>" \
+                    "<b>Android : </b><code>A13 - A14 QPR1</code>" \
 	            "<b>Pipeline Host : </b><code>$KBUILD_BUILD_HOST</code>" \
 	            "<b>Host CPU Name : </b><code>$CPU_NAME</code>" \
 	            "<b>Host Core Count : </b><code>$PROCS</code>" \
