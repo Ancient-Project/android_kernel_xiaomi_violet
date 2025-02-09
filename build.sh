@@ -93,7 +93,7 @@ tg_post_build() {
 
 # Set function for setup KernelSU
 setup_ksu() {
-	curl -kLSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
+	curl -kLSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
 	if [ -d "$KERNEL_DIR"/KernelSU ]; then
 		git apply KernelSU-hook.patch
 	else
